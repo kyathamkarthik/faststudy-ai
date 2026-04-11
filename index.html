@@ -93,7 +93,7 @@ async function ask(mode) {
   output.innerHTML = "<span class='loading'>⏳ Thinking...</span>";
 
   try {
-    const res = await fetch("https://faststudy-ai.onrender.com/ask", {
+    const res = await fetch("https://faststudy-ai.onrender.com", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"

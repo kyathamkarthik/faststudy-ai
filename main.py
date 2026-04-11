@@ -5,6 +5,7 @@ from openai import OpenAI
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -32,12 +33,18 @@ def home():
 
 @app.post("/ask")
 def ask_ai(query: Query):
-    prompt = build_prompt(query.question, query.mode)
+    try:
+        prompt = build_prompt(query.question, query.mode)
 
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[{"role": "user", "content": prompt}],
-        max_tokens=120
-    )
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=120
+        )
 
-    return {"answer": response.choices[0].message.content}
+        answer = response.choices[0].message.content
+
+        return {"answer": answer if answer else "No response"}
+
+    except Exception as e:
+        return {"answer": f"Error: {str(e)}"}
