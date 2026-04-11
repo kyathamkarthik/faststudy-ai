@@ -26,6 +26,7 @@
       border: none;
       outline: none;
       margin-bottom: 15px;
+      font-size: 16px;
     }
 
     .buttons {
@@ -39,12 +40,13 @@
       border: none;
       cursor: pointer;
       font-weight: bold;
-      background: #22c55e;
+      background: linear-gradient(135deg, #22c55e, #16a34a);
       color: white;
+      transition: 0.2s;
     }
 
     button:hover {
-      background: #16a34a;
+      transform: scale(1.05);
     }
 
     .output {
@@ -59,9 +61,23 @@
       line-height: 1.6;
     }
 
-    .loading {
-      color: #94a3b8;
-      font-style: italic;
+    .loader {
+      border: 4px solid #1e293b;
+      border-top: 4px solid #22c55e;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      margin: auto;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      100% { transform: rotate(360deg); }
+    }
+
+    h3 {
+      margin-top: 10px;
+      color: #22c55e;
     }
   </style>
 </head>
@@ -85,15 +101,15 @@ async function ask(mode) {
   const q = document.getElementById("question").value;
   const output = document.getElementById("output");
 
-  if (!q) {
-    output.innerText = "⚠️ Please enter a question";
+  if (!q.trim()) {
+    output.innerText = "⚠️ Enter a question bro";
     return;
   }
 
-  output.innerHTML = "<span class='loading'>⏳ Thinking...</span>";
+  output.innerHTML = `<div class="loader"></div>`;
 
   try {
-    const res = await fetch("https://faststudy-ai.onrender.com", {
+    const res = await fetch("https://faststudy-ai.onrender.com/ask", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -105,11 +121,29 @@ async function ask(mode) {
     });
 
     const data = await res.json();
-    output.innerText = data.answer;
+
+    output.innerHTML = `
+      <div>${formatAnswer(data.answer)}</div>
+      <button onclick="copyText()" style="margin-top:10px;">📋 Copy</button>
+    `;
 
   } catch (err) {
     output.innerText = "❌ Error connecting to server";
   }
+}
+
+function formatAnswer(text) {
+  return text
+    .replace(/### (.*)/g, "<h3>$1</h3>")
+    .replace(/\*\*(.*?)\*\*/g, "<b>$1</b>")
+    .replace(/- /g, "• ")
+    .replace(/\n/g, "<br>");
+}
+
+function copyText() {
+  const text = document.getElementById("output").innerText;
+  navigator.clipboard.writeText(text);
+  alert("Copied!");
 }
 </script>
 
