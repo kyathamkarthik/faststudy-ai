@@ -23,7 +23,19 @@ def build_prompt(q, mode):
     if mode == "short":
         return f"Answer in 2-3 lines only: {q}"
     elif mode == "exam":
-        return f"Give bullet points for exam: {q}"
+     return f"""
+If question is theoretical:
+- Give clean bullet points
+
+If question is numerical/math:
+- Solve step by step
+- Show formulas
+- Show final answer clearly
+
+No # symbols. Use simple bullets.
+
+Question: {q}
+"""
     else:
         return f"Explain simply like a friend: {q}"
 
@@ -39,7 +51,7 @@ def ask_ai(query: Query):
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[{"role": "user", "content": prompt}],
-            max_tokens=120
+            max_tokens=600
         )
 
         answer = response.choices[0].message.content
