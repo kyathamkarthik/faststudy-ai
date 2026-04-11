@@ -2,83 +2,126 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>FastStudy AI | Math Pro</title>
+  <title>FastStudy AI | Multi-Mode</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 
   <style>
-    /* Keep all your Chat-style CSS from the previous version here */
-    /* (Chat bubbles, Sidebar, Green user message, etc.) */
-    body { margin: 0; font-family: 'Segoe UI', sans-serif; background: #f8fafc; display: flex; height: 100vh; }
-    .sidebar { width: 240px; background: white; border-right: 1px solid #e2e8f0; padding: 20px; display: flex; flex-direction: column; }
-    .sidebar h2 { color: #16a34a; font-size: 1.2rem; margin-bottom: 20px; }
-    .sidebar p { padding: 12px; border-radius: 8px; cursor: pointer; color: #475569; margin: 4px 0; }
+    body { margin: 0; font-family: 'Segoe UI', Roboto, sans-serif; background: #f8fafc; display: flex; height: 100vh; overflow: hidden; }
+    
+    /* Sidebar */
+    .sidebar { width: 240px; background: white; border-right: 1px solid #e2e8f0; padding: 25px; display: flex; flex-direction: column; }
+    .sidebar h2 { color: #22c55e; font-size: 22px; margin-bottom: 30px; font-weight: 800; }
+    .sidebar p { padding: 12px; border-radius: 10px; cursor: pointer; color: #64748b; margin: 5px 0; transition: 0.2s; display: flex; align-items: center; gap: 10px; }
+    .sidebar p:hover { background: #f1f5f9; color: #0f172a; }
     .sidebar p.active { background: #e2e8f0; font-weight: bold; color: #0f172a; }
-    .main { flex: 1; display: flex; flex-direction: column; padding: 20px; align-items: center; }
-    .chat-container { width: 100%; max-width: 700px; flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; }
-    .message { padding: 14px 18px; border-radius: 15px; margin-bottom: 12px; max-width: 85%; line-height: 1.6; }
-    .user { background: #22c55e; color: white; align-self: flex-end; }
-    .ai { background: white; border: 1px solid #e2e8f0; align-self: flex-start; }
-    .input-dock { width: 100%; max-width: 700px; background: white; padding: 15px; border-radius: 15px; border: 1px solid #e2e8f0; }
-    input { width: 100%; padding: 12px; border: none; outline: none; }
-    button.send { background: #22c55e; color: white; padding: 8px 16px; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; }
+
+    /* Main Chat Area */
+    .main { flex: 1; display: flex; flex-direction: column; background: #f8fafc; position: relative; }
+    .chat-container { flex: 1; overflow-y: auto; padding: 40px 20px; display: flex; flex-direction: column; align-items: center; }
+    .chat-inner { width: 100%; max-width: 750px; display: flex; flex-direction: column; }
+
+    /* Message Bubbles */
+    .message { padding: 15px 20px; border-radius: 18px; margin-bottom: 15px; max-width: 80%; line-height: 1.6; font-size: 15px; }
+    .user { background: #22c55e; color: white; align-self: flex-end; border-bottom-right-radius: 4px; box-shadow: 0 4px 12px rgba(34, 197, 94, 0.2); }
+    .ai { background: white; color: #1e293b; align-self: flex-start; border-bottom-left-radius: 4px; border: 1px solid #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+
+    /* Input Area */
+    .input-wrapper { padding: 20px; display: flex; justify-content: center; background: white; border-top: 1px solid #e2e8f0; }
+    .input-box { width: 100%; max-width: 750px; display: flex; flex-direction: column; gap: 10px; }
+    input { width: 100%; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0; outline: none; font-size: 16px; box-sizing: border-box; transition: 0.2s; }
+    input:focus { border-color: #22c55e; box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1); }
+
+    .modes { display: flex; gap: 10px; }
+    .mode-btn { padding: 8px 15px; border-radius: 8px; border: 1px solid #e2e8f0; background: white; cursor: pointer; font-size: 13px; font-weight: 600; color: #64748b; transition: 0.2s; }
+    .mode-btn:hover { border-color: #22c55e; color: #22c55e; }
+    .mode-btn.active { background: #22c55e; color: white; border-color: #22c55e; }
+
+    /* Loader */
+    .typing { font-style: italic; color: #94a3b8; font-size: 13px; margin-left: 10px; }
   </style>
 </head>
 <body>
 
 <div class="sidebar">
   <h2 id="user-display">⚡ FastStudy</h2>
-  <p onclick="showPage('home')" class="active" id="nav-home">🏠 Chat</p>
-  <p onclick="showPage('recents')" id="nav-recents">📜 Recents</p>
+  <p onclick="location.reload()" class="active" id="nav-home">🏠 New Chat</p>
+  <p onclick="showPage('recents')" id="nav-recents">📜 History</p>
   <p onclick="showLogin()" id="nav-login">👤 Profile</p>
   <p onclick="logout()" style="margin-top:auto; color: #ef4444;">🚪 Logout</p>
 </div>
 
 <div class="main">
-  <div id="chat" class="chat-container">
-    <div class="message ai">Math rendering is now ACTIVE. Try asking me for a derivative or a circuit formula!</div>
+  <div class="chat-container" id="chat-scroll">
+    <div class="chat-inner" id="chat-area">
+      <div class="message ai">👋 Hey! I'm your AI Study Partner. Choose a mode below and ask me anything.</div>
+    </div>
   </div>
 
-  <div class="input-dock">
-    <input id="question" placeholder="Ask a math problem..." />
-    <button class="send" onclick="ask('exam')">Solve →</button>
+  <div class="input-wrapper">
+    <div class="input-box">
+      <div class="modes">
+        <button class="mode-btn active" id="btn-normal" onclick="setMode('normal')">💬 Normal AI</button>
+        <button class="mode-btn" id="btn-math" onclick="setMode('math')">📐 Math Solving</button>
+        <button class="mode-btn" id="btn-short" onclick="setMode('short')">⚡ Quick Summary</button>
+      </div>
+      <div style="display: flex; gap: 10px;">
+        <input id="question" placeholder="Type your question here..." onkeypress="if(event.key === 'Enter') ask()" />
+        <button onclick="ask()" style="background:#22c55e; color:white; border:none; padding:0 20px; border-radius:12px; cursor:pointer; font-weight:bold;">Send</button>
+      </div>
+    </div>
   </div>
 </div>
 
 <script>
+let currentMode = 'normal';
 let currentUser = localStorage.getItem("user") || null;
 const API_URL = "https://faststudy-ai.onrender.com";
 
-async function ask(mode) {
+function setMode(mode) {
+  currentMode = mode;
+  document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+  document.getElementById('btn-' + mode).classList.add('active');
+  
+  const input = document.getElementById("question");
+  if (mode === 'math') input.placeholder = "Enter your math problem (e.g. solve x^2 + 5x + 6 = 0)";
+  else if (mode === 'short') input.placeholder = "Paste a long text for a quick summary...";
+  else input.placeholder = "Ask anything like a normal conversation...";
+}
+
+async function ask() {
   const qInput = document.getElementById("question");
   const q = qInput.value;
-  const chat = document.getElementById("chat");
+  const chatArea = document.getElementById("chat-area");
 
   if (!q.trim()) return;
 
-  chat.innerHTML += `<div class="message user">${q}</div>`;
+  // Add User Message
+  chatArea.innerHTML += `<div class="message user">${q}</div>`;
   qInput.value = "";
   
-  const tempId = "loading-" + Date.now();
-  chat.innerHTML += `<div class="message ai" id="${tempId}">⏳ Calculating...</div>`;
-  chat.scrollTop = chat.scrollHeight;
+  // Add Thinking Message
+  const tempId = "msg-" + Date.now();
+  chatArea.innerHTML += `<div class="message ai" id="${tempId}"><span class="typing">AI is thinking...</span></div>`;
+  scrollToBottom();
 
   try {
     const res = await fetch(`${API_URL}/ask`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ question: q, mode: mode })
+      body: JSON.stringify({ question: q, mode: currentMode })
     });
     const data = await res.json();
 
-    // STEP 2 & 3: Format and RENDER MATH
-    document.getElementById(tempId).innerHTML = formatAnswer(data.answer);
-    
-    // Trigger MathJax to look for LaTeX in the new message
+    // Replace Loader with Response
+    const aiMsgElement = document.getElementById(tempId);
+    aiMsgElement.innerHTML = formatAnswer(data.answer);
+
+    // TRIGGER MATH RENDERING if needed
     if (window.MathJax) {
-      MathJax.typesetPromise([document.getElementById(tempId)]).then(() => {
-        chat.scrollTop = chat.scrollHeight;
+      MathJax.typesetPromise([aiMsgElement]).then(() => {
+        scrollToBottom();
       });
     }
 
@@ -90,20 +133,23 @@ async function ask(mode) {
       });
     }
   } catch (err) {
-    document.getElementById(tempId).innerText = "❌ Error rendering answer.";
+    document.getElementById(tempId).innerText = "❌ Connection error.";
   }
 }
 
 function formatAnswer(text) {
   return text
-    .replace(/### (.*)/g, "<h3>$1</h3>")
     .replace(/\*\*(.*?)\*\*/g, "<b>$1</b>")
-    .replace(/- /g, "• ")
     .replace(/\n/g, "<br>");
 }
 
-function showPage(page) { /* logic to switch active tabs */ }
+function scrollToBottom() {
+  const container = document.getElementById("chat-scroll");
+  container.scrollTop = container.scrollHeight;
+}
+
 function logout() { localStorage.clear(); location.reload(); }
+// ... keep showPage and Login functions same as before ...
 </script>
 </body>
 </html>
