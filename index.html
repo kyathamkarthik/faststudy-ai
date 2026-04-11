@@ -181,7 +181,6 @@
 <script>
 let currentUser = null;
 
-// --- AUTO LOGIN ON LOAD ---
 window.onload = function() {
   const savedUser = localStorage.getItem("user");
   if (savedUser) {
@@ -190,47 +189,31 @@ window.onload = function() {
   }
 };
 
-// --- LOGIN SYSTEM ---
+// LOGIN SYSTEM
 function showLogin() {
   const output = document.getElementById("output");
   output.innerHTML = `
-    <h3>Login to FastStudy</h3>
-    <p>Enter your name to save your study history locally.</p>
-    <input id="username" placeholder="Enter your name..." style="margin-top:10px;"/>
-    <button onclick="login()">Start Studying</button>
+    <h3>Login</h3>
+    <input id="username" placeholder="Enter your name" />
+    <button onclick="login()">Login</button>
   `;
 }
 
 function login() {
   const name = document.getElementById("username").value;
-  if (!name.trim()) {
-    alert("Please enter a name to continue!");
-    return;
-  }
+  if (!name.trim()) return alert("Enter name");
   currentUser = name;
   localStorage.setItem("user", name);
   document.getElementById("user-display").innerText = "⚡ " + name;
-  alert("Welcome, " + name + "!");
   showPage("home");
 }
 
-function logout() {
-  localStorage.removeItem("user");
-  currentUser = null;
-  document.getElementById("user-display").innerText = "⚡ FastStudy";
-  alert("Logged out!");
-  location.reload(); 
-}
-
-// --- CORE AI FUNCTIONS ---
+// THE BIG UPGRADE: ASK + SAVE TO BACKEND
 async function ask(mode) {
   const q = document.getElementById("question").value;
   const output = document.getElementById("output");
 
-  if (!q.trim()) {
-    output.innerText = "⚠️ Enter a question first!";
-    return;
-  }
+  if (!q.trim()) return output.innerText = "⚠️ Enter a question";
 
   output.innerHTML = `<div class="loader"></div>`;
 
@@ -243,75 +226,74 @@ async function ask(mode) {
 
     const data = await res.json();
 
-    // Save to history (now user-specific)
-    saveToHistory(q, data.answer);
+    // STEP 4 FIX: Save to Backend Database
+    if (currentUser) {
+      fetch("https://faststudy-ai.onrender.com/save", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user: currentUser,
+          question: q,
+          answer: data.answer
+        })
+      });
+    }
 
     output.innerHTML = `
       <div>${formatAnswer(data.answer)}</div>
-      <button onclick="copyText()" style="margin-top:20px; background: #64748b;">📋 Copy Answer</button>
+      <button onclick="copyText()" style="margin-top:10px;">📋 Copy</button>
     `;
+
   } catch (err) {
-    output.innerText = "❌ Connection error. Is the backend running?";
+    output.innerText = "❌ Error connecting to server";
   }
 }
 
-// --- DATA STORAGE ---
-function saveToHistory(q, ans) {
-  if (!currentUser) return; // Don't save if guest
+// STEP 5 FIX: Fetch Recents from Backend
+async function getRecents() {
+  if (!currentUser) return "Login to see history";
 
-  let allHistory = JSON.parse(localStorage.getItem("history")) || {};
-  if (!allHistory[currentUser]) {
-    allHistory[currentUser] = [];
-  }
+  const res = await fetch(`https://faststudy-ai.onrender.com/history/${currentUser}`);
+  const data = await res.json();
 
-  allHistory[currentUser].unshift({ q, ans, date: new Date().toLocaleDateString() });
-  localStorage.setItem("history", JSON.stringify(allHistory));
-}
+  if (data.length === 0) return "No recent questions found in the cloud.";
 
-function getRecents() {
-  if (!currentUser) return "<p>⚠️ Please <b>Login</b> to view your personal history.</p>";
-
-  let allHistory = JSON.parse(localStorage.getItem("history")) || {};
-  let userHistory = allHistory[currentUser] || [];
-
-  if (userHistory.length === 0) return "<p>No history found for " + currentUser + ". Start asking questions!</p>";
-
-  return userHistory.map(item => `
-    <div class="recent-item">
-      <small>${item.date}</small><br>
+  return data.map(item => `
+    <div style="margin-bottom:15px; background:#f1f5f9; padding:10px; border-radius:8px;">
       <b>Q:</b> ${item.q}<br>
-      <div style="margin-top:8px; font-size: 14px;"><b>A:</b> ${item.ans.substring(0, 200)}...</div>
+      <b>A:</b> ${item.ans.substring(0, 200)}...
     </div>
   `).join("");
 }
 
-// --- NAVIGATION & UI ---
+// STEP 6 FIX: Updated showPage for Async Recents
 function showPage(page) {
   const output = document.getElementById("output");
-  
-  // Highlight sidebar
   document.querySelectorAll(".sidebar p").forEach(p => p.classList.remove("active"));
-  document.getElementById("nav-" + page)?.classList.add("active");
-
+  document.getElementById("nav-" + page).classList.add("active");
+  
   if (page === "home") {
     output.innerHTML = "Ask your question...";
-  } else if (page === "recents") {
-    output.innerHTML = "<h3>Your Recent Questions</h3>" + getRecents();
-  } else if (page === "settings") {
-    output.innerHTML = "<h3>Settings ⚙️</h3><p>Connected User: <b>" + (currentUser || "Guest") + "</b></p>";
+  }
+
+  if (page === "recents") {
+    output.innerHTML = "Loading your history... 🔄";
+    getRecents().then(html => {
+      output.innerHTML = "<h3>Cloud History</h3>" + html;
+    });
+  }
+
+  if (page === "settings") {
+    output.innerHTML = "<h3>Settings coming soon ⚙️</h3>";
   }
 }
 
 function formatAnswer(text) {
-  return text
-    .replace(/### (.*)/g, "<h3>$1</h3>")
-    .replace(/\*\*(.*?)\*\*/g, "<b>$1</b>")
-    .replace(/- /g, "• ")
-    .replace(/\n/g, "<br>");
+  return text.replace(/\*\*(.*?)\*\*/g, "<b>$1</b>").replace(/\n/g, "<br>");
 }
 
 function copyText() {
-  const text = document.getElementById("output").innerText.replace("📋 Copy Answer", "");
+  const text = document.getElementById("output").innerText;
   navigator.clipboard.writeText(text);
   alert("Copied!");
 }
