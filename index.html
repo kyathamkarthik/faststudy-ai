@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>FastStudy AI</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #0f172a, #1e293b);
+      color: white;
+      text-align: center;
+      padding: 20px;
+    }
+
+    h1 {
+      font-size: 28px;
+      margin-bottom: 20px;
+    }
+
+    input {
+      width: 90%;
+      max-width: 500px;
+      padding: 12px;
+      border-radius: 10px;
+      border: none;
+      outline: none;
+      margin-bottom: 15px;
+    }
+
+    .buttons {
+      margin-bottom: 20px;
+    }
+
+    button {
+      margin: 5px;
+      padding: 10px 15px;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+      background: #22c55e;
+      color: white;
+    }
+
+    button:hover {
+      background: #16a34a;
+    }
+
+    .output {
+      margin-top: 20px;
+      padding: 20px;
+      background: #020617;
+      border-radius: 12px;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+      text-align: left;
+      line-height: 1.6;
+    }
+
+    .loading {
+      color: #94a3b8;
+      font-style: italic;
+    }
+  </style>
+</head>
+
+<body>
+
+<h1>⚡ FastStudy AI</h1>
+
+<input id="question" placeholder="Ask your exam question..." />
+
+<div class="buttons">
+  <button onclick="ask('short')">⚡ Short</button>
+  <button onclick="ask('exam')">📚 Exam</button>
+  <button onclick="ask('explain')">😄 Explain</button>
+</div>
+
+<div id="output" class="output">Your answer will appear here...</div>
+
+<script>
+async function ask(mode) {
+  const q = document.getElementById("question").value;
+  const output = document.getElementById("output");
+
+  if (!q) {
+    output.innerText = "⚠️ Please enter a question";
+    return;
+  }
+
+  output.innerHTML = "<span class='loading'>⏳ Thinking...</span>";
+
+  try {
+    const res = await fetch("https://faststudy-ai.onrender.com/ask", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        question: q,
+        mode: mode
+      })
+    });
+
+    const data = await res.json();
+    output.innerText = data.answer;
+
+  } catch (err) {
+    output.innerText = "❌ Error connecting to server";
+  }
+}
+</script>
+
+</body>
+</html>
