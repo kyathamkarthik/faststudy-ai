@@ -46,11 +46,26 @@ def save_data(data):
 # --- AI LOGIC ---
 def build_prompt(q, mode):
     if mode == "short":
-        return f"Answer in 2-3 lines only: {q}"
+        return f"Give a concise 2-sentence summary: {q}"
+    
+    # THE MATH/ENGINEERING PROMPT
     elif mode == "exam":
-        return f"Give clean bullet points or step-by-step solving for: {q}. No # symbols."
+        return f"""
+        You are an expert Engineering Professor. 
+        If the question involves Math or Logic:
+        1. List the given values.
+        2. State the formula to be used.
+        3. Show step-by-step substitution.
+        4. Bold the final answer.
+        
+        If the question is theoretical:
+        - Use structured bullet points.
+        - Use professional language.
+        
+        Question: {q}
+        """
     else:
-        return f"Explain simply like a friend: {q}"
+        return f"Explain this like we are grabbing a coffee together, very simple: {q}"
 
 # --- ENDPOINTS ---
 @app.get("/")
