@@ -45,28 +45,34 @@ def save_data(data):
 
 # --- AI LOGIC ---
 def build_prompt(q, mode):
+    # 1. SHORT MODE
     if mode == "short":
-        return f"Give a concise 2-sentence summary: {q}"
+        return f"Give a concise 2-sentence summary using LaTeX for any variables: {q}"
     
-    # THE MATH/ENGINEERING PROMPT
+    # 2. EXAM MODE (The Heavy Lifter)
     elif mode == "exam":
         return f"""
-        You are an expert Engineering Professor. 
-        If the question involves Math or Logic:
-        1. List the given values.
-        2. State the formula to be used.
-        3. Show step-by-step substitution.
-        4. Bold the final answer.
+        You are an elite Engineering Professor specializing in Math and Science.
         
-        If the question is theoretical:
-        - Use structured bullet points.
-        - Use professional language.
+        INSTRUCTIONS:
+        1. Solve the problem step-by-step.
+        2. USE LaTeX for ALL mathematical expressions, variables, and formulas.
+        3. Use \\( variable \\) for inline math (e.g., \\( x = 5 \\)).
+        4. Use \\[ formula \\] for large, centered equations.
+        5. Be precise and clear.
         
+        EXAMPLE FORMAT:
+        The formula is:
+        \\[ f(x) = x^2 + 2x + 1 \\]
+        Substituting \\( x = 2 \\):
+        \\[ f(2) = (2)^2 + 2(2) + 1 = 9 \\]
+
         Question: {q}
         """
+    
+    # 3. EXPLAIN MODE (The "Coffee" Mode)
     else:
-        return f"Explain this like we are grabbing a coffee together, very simple: {q}"
-
+        return f"Explain this like we are grabbing a coffee together, very simple. Use \\( \\) for any math terms mentioned: {q}"
 # --- ENDPOINTS ---
 @app.get("/")
 def home():
