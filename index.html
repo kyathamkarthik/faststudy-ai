@@ -1,7 +1,8 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>FastStudy AI</title>
+  <meta charset="UTF-8">
+  <title>FastStudy AI | Pro</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
@@ -15,28 +16,36 @@
 
     /* Sidebar */
     .sidebar {
-      width: 220px;
+      width: 240px;
       height: 100vh;
       background: white;
       border-right: 1px solid #e2e8f0;
       padding: 20px;
       position: sticky;
       top: 0;
+      display: flex;
+      flex-direction: column;
     }
 
     .sidebar h2 {
       font-size: 18px;
-      margin-bottom: 20px;
+      margin-bottom: 25px;
       color: #16a34a;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .sidebar p {
-      padding: 10px;
+      padding: 12px;
       border-radius: 8px;
       cursor: pointer;
       transition: 0.2s;
-      margin: 5px 0;
+      margin: 4px 0;
       color: #475569;
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
 
     .sidebar p:hover {
@@ -53,11 +62,11 @@
     .main {
       flex: 1;
       padding: 40px;
-      max-width: 800px;
+      max-width: 900px;
     }
 
     .header {
-      font-size: 26px;
+      font-size: 28px;
       font-weight: bold;
       margin-bottom: 5px;
     }
@@ -67,11 +76,7 @@
       margin-bottom: 30px;
     }
 
-    /* Chat/Input Box */
-    .chat-box {
-      width: 100%;
-    }
-
+    /* Input & UI Elements */
     input {
       width: 100%;
       padding: 14px;
@@ -81,11 +86,11 @@
       font-size: 16px;
       margin-bottom: 15px;
       box-sizing: border-box;
-      transition: border 0.2s;
     }
 
     input:focus {
       border-color: #22c55e;
+      box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
     }
 
     .buttons {
@@ -93,8 +98,7 @@
     }
 
     button {
-      margin-right: 10px;
-      padding: 10px 20px;
+      padding: 10px 22px;
       border-radius: 10px;
       border: none;
       cursor: pointer;
@@ -102,22 +106,30 @@
       background: linear-gradient(135deg, #22c55e, #16a34a);
       color: white;
       transition: 0.2s;
+      margin-right: 8px;
     }
 
     button:hover {
-      transform: translateY(-2px);
+      transform: translateY(-1px);
       box-shadow: 0 4px 12px rgba(34, 197, 94, 0.2);
     }
 
-    /* Output Area */
     .output {
       background: white;
       padding: 25px;
       border-radius: 12px;
       border: 1px solid #e2e8f0;
-      min-height: 120px;
+      min-height: 150px;
       line-height: 1.6;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    /* History Items */
+    .recent-item {
+      background: #f1f5f9;
+      padding: 15px;
+      border-radius: 10px;
+      margin-bottom: 12px;
+      border-left: 5px solid #22c55e;
     }
 
     /* Loader */
@@ -131,65 +143,92 @@
       animation: spin 1s linear infinite;
     }
 
-    @keyframes spin {
-      100% { transform: rotate(360deg); }
-    }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
 
-    h3 {
-      color: #16a34a;
-      margin-top: 0;
-    }
-
-    .recent-item {
-      background: #f8fafc;
-      padding: 15px;
-      border-radius: 8px;
-      margin-bottom: 15px;
-      border-left: 4px solid #22c55e;
-    }
+    h3 { color: #16a34a; margin-top: 0; }
   </style>
 </head>
-
 <body>
 
 <div class="sidebar">
-  <h2>⚡ FastStudy</h2>
-  <p onclick="showPage('home')" class="active">🏠 Home</p>
-  <p onclick="showPage('recents')">📜 Recents</p>
-  <p onclick="showPage('settings')">⚙️ Settings</p>
-  <p>👤 Login</p>
+  <h2 id="user-display">⚡ FastStudy</h2>
+  <p onclick="showPage('home')" class="active" id="nav-home">🏠 Home</p>
+  <p onclick="showPage('recents')" id="nav-recents">📜 Recents</p>
+  <p onclick="showPage('settings')" id="nav-settings">⚙️ Settings</p>
+  <p onclick="showLogin()" id="nav-login">👤 Login</p>
+  <p onclick="logout()" style="margin-top:auto; color: #ef4444;">🚪 Logout</p>
 </div>
 
 <div class="main">
+  <div id="page-content">
+    <div class="header">AI Study Assistant</div>
+    <div class="tagline">⚡ Learn faster. Study smarter.</div>
 
-  <div class="header">AI Study Assistant</div>
-  <div class="tagline">⚡ Learn faster. Study smarter.</div>
-
-  <div class="chat-box" id="chat-container">
-    <input id="question" placeholder="Ask your exam question..." />
-
-    <div class="buttons">
-      <button onclick="ask('short')">⚡ Short</button>
-      <button onclick="ask('exam')">📚 Exam</button>
-      <button onclick="ask('explain')">😄 Explain</button>
-    </div>
-
-    <div id="output" class="output">
-      Your answer will appear here...
+    <div class="chat-box">
+      <input id="question" placeholder="Ask your exam question..." />
+      <div class="buttons">
+        <button onclick="ask('short')">⚡ Short</button>
+        <button onclick="ask('exam')">📚 Exam</button>
+        <button onclick="ask('explain')">😄 Explain</button>
+      </div>
+      <div id="output" class="output">
+        Your answer will appear here...
+      </div>
     </div>
   </div>
-
 </div>
 
 <script>
-let history = [];
+let currentUser = null;
 
+// --- AUTO LOGIN ON LOAD ---
+window.onload = function() {
+  const savedUser = localStorage.getItem("user");
+  if (savedUser) {
+    currentUser = savedUser;
+    document.getElementById("user-display").innerText = "⚡ " + savedUser;
+  }
+};
+
+// --- LOGIN SYSTEM ---
+function showLogin() {
+  const output = document.getElementById("output");
+  output.innerHTML = `
+    <h3>Login to FastStudy</h3>
+    <p>Enter your name to save your study history locally.</p>
+    <input id="username" placeholder="Enter your name..." style="margin-top:10px;"/>
+    <button onclick="login()">Start Studying</button>
+  `;
+}
+
+function login() {
+  const name = document.getElementById("username").value;
+  if (!name.trim()) {
+    alert("Please enter a name to continue!");
+    return;
+  }
+  currentUser = name;
+  localStorage.setItem("user", name);
+  document.getElementById("user-display").innerText = "⚡ " + name;
+  alert("Welcome, " + name + "!");
+  showPage("home");
+}
+
+function logout() {
+  localStorage.removeItem("user");
+  currentUser = null;
+  document.getElementById("user-display").innerText = "⚡ FastStudy";
+  alert("Logged out!");
+  location.reload(); 
+}
+
+// --- CORE AI FUNCTIONS ---
 async function ask(mode) {
   const q = document.getElementById("question").value;
   const output = document.getElementById("output");
 
   if (!q.trim()) {
-    output.innerText = "⚠️ Enter a question";
+    output.innerText = "⚠️ Enter a question first!";
     return;
   }
 
@@ -198,27 +237,68 @@ async function ask(mode) {
   try {
     const res = await fetch("https://faststudy-ai.onrender.com/ask", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        question: q,
-        mode: mode
-      })
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ question: q, mode: mode })
     });
 
     const data = await res.json();
 
-    // ISSUE 2 FIX: Save to history before displaying
+    // Save to history (now user-specific)
     saveToHistory(q, data.answer);
 
     output.innerHTML = `
       <div>${formatAnswer(data.answer)}</div>
       <button onclick="copyText()" style="margin-top:20px; background: #64748b;">📋 Copy Answer</button>
     `;
-
   } catch (err) {
-    output.innerText = "❌ Error connecting to server. Make sure the backend is awake!";
+    output.innerText = "❌ Connection error. Is the backend running?";
+  }
+}
+
+// --- DATA STORAGE ---
+function saveToHistory(q, ans) {
+  if (!currentUser) return; // Don't save if guest
+
+  let allHistory = JSON.parse(localStorage.getItem("history")) || {};
+  if (!allHistory[currentUser]) {
+    allHistory[currentUser] = [];
+  }
+
+  allHistory[currentUser].unshift({ q, ans, date: new Date().toLocaleDateString() });
+  localStorage.setItem("history", JSON.stringify(allHistory));
+}
+
+function getRecents() {
+  if (!currentUser) return "<p>⚠️ Please <b>Login</b> to view your personal history.</p>";
+
+  let allHistory = JSON.parse(localStorage.getItem("history")) || {};
+  let userHistory = allHistory[currentUser] || [];
+
+  if (userHistory.length === 0) return "<p>No history found for " + currentUser + ". Start asking questions!</p>";
+
+  return userHistory.map(item => `
+    <div class="recent-item">
+      <small>${item.date}</small><br>
+      <b>Q:</b> ${item.q}<br>
+      <div style="margin-top:8px; font-size: 14px;"><b>A:</b> ${item.ans.substring(0, 200)}...</div>
+    </div>
+  `).join("");
+}
+
+// --- NAVIGATION & UI ---
+function showPage(page) {
+  const output = document.getElementById("output");
+  
+  // Highlight sidebar
+  document.querySelectorAll(".sidebar p").forEach(p => p.classList.remove("active"));
+  document.getElementById("nav-" + page)?.classList.add("active");
+
+  if (page === "home") {
+    output.innerHTML = "Ask your question...";
+  } else if (page === "recents") {
+    output.innerHTML = "<h3>Your Recent Questions</h3>" + getRecents();
+  } else if (page === "settings") {
+    output.innerHTML = "<h3>Settings ⚙️</h3><p>Connected User: <b>" + (currentUser || "Guest") + "</b></p>";
   }
 }
 
@@ -233,45 +313,7 @@ function formatAnswer(text) {
 function copyText() {
   const text = document.getElementById("output").innerText.replace("📋 Copy Answer", "");
   navigator.clipboard.writeText(text);
-  alert("Copied to clipboard!");
-}
-
-function showPage(page) {
-  const output = document.getElementById("output");
-  const chatContainer = document.getElementById("chat-container");
-  
-  // IMPROVEMENT 1 FIX: Sidebar active highlight
-  document.querySelectorAll(".sidebar p").forEach(p => p.classList.remove("active"));
-  event.currentTarget.classList.add("active");
-
-  if (page === "home") {
-    chatContainer.style.display = "block";
-    output.innerHTML = "Ask your question...";
-  }
-
-  if (page === "recents") {
-    // Hide input area for a cleaner look in history
-    output.innerHTML = "<h3>Recent History</h3>" + getRecents();
-  }
-
-  if (page === "settings") {
-    output.innerHTML = "<h3>Settings ⚙️</h3><p>User preferences coming soon!</p>";
-  }
-}
-
-function saveToHistory(q, ans) {
-  history.unshift({ q, ans });
-}
-
-function getRecents() {
-  if (history.length === 0) return "<p>No recent questions yet. Start studying!</p>";
-
-  return history.map(item => `
-    <div class="recent-item">
-      <b>Q:</b> ${item.q}<br>
-      <div style="margin-top:8px; font-size: 14px; color: #334155;"><b>A:</b> ${item.ans.substring(0, 150)}...</div>
-    </div>
-  `).join("");
+  alert("Copied!");
 }
 </script>
 
