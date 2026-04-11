@@ -7,9 +7,9 @@
   <style>
     body {
       margin: 0;
-      font-family: 'Segoe UI', sans-serif;
-      background: #0f172a;
-      color: white;
+      font-family: 'Segoe UI', Roboto, sans-serif;
+      background: #f8fafc;
+      color: #0f172a;
       display: flex;
     }
 
@@ -17,65 +17,84 @@
     .sidebar {
       width: 220px;
       height: 100vh;
-      background: #020617;
+      background: white;
+      border-right: 1px solid #e2e8f0;
       padding: 20px;
-      box-sizing: border-box;
+      position: sticky;
+      top: 0;
     }
 
     .sidebar h2 {
       font-size: 18px;
       margin-bottom: 20px;
+      color: #16a34a;
     }
 
     .sidebar p {
-      color: #94a3b8;
+      padding: 10px;
+      border-radius: 8px;
       cursor: pointer;
-      margin: 10px 0;
+      transition: 0.2s;
+      margin: 5px 0;
+      color: #475569;
     }
 
-    /* Main */
+    .sidebar p:hover {
+      background: #f1f5f9;
+    }
+
+    .sidebar p.active {
+      background: #e2e8f0;
+      font-weight: bold;
+      color: #0f172a;
+    }
+
+    /* Main Content */
     .main {
       flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 20px;
+      padding: 40px;
+      max-width: 800px;
     }
 
     .header {
-      font-size: 22px;
-      margin-bottom: 10px;
+      font-size: 26px;
+      font-weight: bold;
+      margin-bottom: 5px;
     }
 
     .tagline {
-      color: #94a3b8;
-      margin-bottom: 20px;
+      color: #64748b;
+      margin-bottom: 30px;
     }
 
-    /* Chat Box */
+    /* Chat/Input Box */
     .chat-box {
       width: 100%;
-      max-width: 700px;
     }
 
     input {
       width: 100%;
       padding: 14px;
       border-radius: 12px;
-      border: none;
+      border: 1px solid #e2e8f0;
       outline: none;
       font-size: 16px;
       margin-bottom: 15px;
+      box-sizing: border-box;
+      transition: border 0.2s;
+    }
+
+    input:focus {
+      border-color: #22c55e;
     }
 
     .buttons {
-      text-align: center;
-      margin-bottom: 20px;
+      margin-bottom: 25px;
     }
 
     button {
-      margin: 5px;
-      padding: 10px 16px;
+      margin-right: 10px;
+      padding: 10px 20px;
       border-radius: 10px;
       border: none;
       cursor: pointer;
@@ -86,25 +105,29 @@
     }
 
     button:hover {
-      transform: scale(1.05);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(34, 197, 94, 0.2);
     }
 
+    /* Output Area */
     .output {
-      background: #020617;
-      padding: 20px;
+      background: white;
+      padding: 25px;
       border-radius: 12px;
-      min-height: 100px;
+      border: 1px solid #e2e8f0;
+      min-height: 120px;
       line-height: 1.6;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     }
 
     /* Loader */
     .loader {
-      border: 4px solid #1e293b;
+      border: 4px solid #f3f3f3;
       border-top: 4px solid #22c55e;
       border-radius: 50%;
       width: 30px;
       height: 30px;
-      margin: auto;
+      margin: 20px auto;
       animation: spin 1s linear infinite;
     }
 
@@ -113,30 +136,36 @@
     }
 
     h3 {
-      color: #22c55e;
+      color: #16a34a;
+      margin-top: 0;
+    }
+
+    .recent-item {
+      background: #f8fafc;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      border-left: 4px solid #22c55e;
     }
   </style>
 </head>
 
 <body>
 
-<!-- Sidebar -->
 <div class="sidebar">
   <h2>⚡ FastStudy</h2>
-  <p>🏠 Home</p>
-  <p>📚 Subjects</p>
-  <p>🧠 Practice</p>
-  <p>⚙️ Settings</p>
+  <p onclick="showPage('home')" class="active">🏠 Home</p>
+  <p onclick="showPage('recents')">📜 Recents</p>
+  <p onclick="showPage('settings')">⚙️ Settings</p>
+  <p>👤 Login</p>
 </div>
 
-<!-- Main Content -->
 <div class="main">
 
   <div class="header">AI Study Assistant</div>
   <div class="tagline">⚡ Learn faster. Study smarter.</div>
 
-  <div class="chat-box">
-
+  <div class="chat-box" id="chat-container">
     <input id="question" placeholder="Ask your exam question..." />
 
     <div class="buttons">
@@ -148,12 +177,13 @@
     <div id="output" class="output">
       Your answer will appear here...
     </div>
-
   </div>
 
 </div>
 
 <script>
+let history = [];
+
 async function ask(mode) {
   const q = document.getElementById("question").value;
   const output = document.getElementById("output");
@@ -179,13 +209,16 @@ async function ask(mode) {
 
     const data = await res.json();
 
+    // ISSUE 2 FIX: Save to history before displaying
+    saveToHistory(q, data.answer);
+
     output.innerHTML = `
       <div>${formatAnswer(data.answer)}</div>
-      <button onclick="copyText()" style="margin-top:10px;">📋 Copy</button>
+      <button onclick="copyText()" style="margin-top:20px; background: #64748b;">📋 Copy Answer</button>
     `;
 
   } catch (err) {
-    output.innerText = "❌ Error connecting to server";
+    output.innerText = "❌ Error connecting to server. Make sure the backend is awake!";
   }
 }
 
@@ -198,9 +231,47 @@ function formatAnswer(text) {
 }
 
 function copyText() {
-  const text = document.getElementById("output").innerText;
+  const text = document.getElementById("output").innerText.replace("📋 Copy Answer", "");
   navigator.clipboard.writeText(text);
-  alert("Copied!");
+  alert("Copied to clipboard!");
+}
+
+function showPage(page) {
+  const output = document.getElementById("output");
+  const chatContainer = document.getElementById("chat-container");
+  
+  // IMPROVEMENT 1 FIX: Sidebar active highlight
+  document.querySelectorAll(".sidebar p").forEach(p => p.classList.remove("active"));
+  event.currentTarget.classList.add("active");
+
+  if (page === "home") {
+    chatContainer.style.display = "block";
+    output.innerHTML = "Ask your question...";
+  }
+
+  if (page === "recents") {
+    // Hide input area for a cleaner look in history
+    output.innerHTML = "<h3>Recent History</h3>" + getRecents();
+  }
+
+  if (page === "settings") {
+    output.innerHTML = "<h3>Settings ⚙️</h3><p>User preferences coming soon!</p>";
+  }
+}
+
+function saveToHistory(q, ans) {
+  history.unshift({ q, ans });
+}
+
+function getRecents() {
+  if (history.length === 0) return "<p>No recent questions yet. Start studying!</p>";
+
+  return history.map(item => `
+    <div class="recent-item">
+      <b>Q:</b> ${item.q}<br>
+      <div style="margin-top:8px; font-size: 14px; color: #334155;"><b>A:</b> ${item.ans.substring(0, 150)}...</div>
+    </div>
+  `).join("");
 }
 </script>
 
