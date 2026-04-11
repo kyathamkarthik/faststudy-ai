@@ -45,35 +45,40 @@ def save_data(data):
 
 # --- AI LOGIC ---
 def build_prompt(q, mode):
-    # 1. SHORT MODE
+    # 1. ⚡ SHORT MODE: Fast, direct, no fluff.
     if mode == "short":
-        return f"Give a concise 2-sentence summary using LaTeX for any variables: {q}"
-    
-    # 2. EXAM MODE (The Heavy Lifter)
-    elif mode == "exam":
         return f"""
-        You are an elite Engineering Professor specializing in Math and Science.
+        You are a helpful, brief AI assistant. 
+        Answer this question in 2-3 sentences max. 
+        Use \\( \\) for any technical terms or math.
         
-        INSTRUCTIONS:
-        1. Solve the problem step-by-step.
-        2. USE LaTeX for ALL mathematical expressions, variables, and formulas.
-        3. Use \\( variable \\) for inline math (e.g., \\( x = 5 \\)).
-        4. Use \\[ formula \\] for large, centered equations.
-        5. Be precise and clear.
-        
-        EXAMPLE FORMAT:
-        The formula is:
-        \\[ f(x) = x^2 + 2x + 1 \\]
-        Substituting \\( x = 2 \\):
-        \\[ f(2) = (2)^2 + 2(2) + 1 = 9 \\]
-
         Question: {q}
         """
     
-    # 3. EXPLAIN MODE (The "Coffee" Mode)
+    # 2. 📚 EXAM MODE: The Professor (Math & LaTeX Heavy)
+    elif mode == "exam":
+        return f"""
+        You are an elite Engineering Professor. 
+        INSTRUCTIONS:
+        1. Solve step-by-step.
+        2. Use LaTeX for ALL math: \\( inline \\) and \\[ block \\].
+        3. Be formal and precise.
+        
+        Question: {q}
+        """
+    
+    # 3. 😄 EXPLAIN MODE: The "Coffee" Friend (Normal Conversation)
     else:
-        return f"Explain this like we are grabbing a coffee together, very simple. Use \\( \\) for any math terms mentioned: {q}"
-# --- ENDPOINTS ---
+        return f"""
+        You are a friendly, smart classmate. 
+        Explain this concept in simple, conversational terms like we're hanging out.
+        Don't be overly formal. Use analogies.
+        If there's math, keep it simple.
+        
+        Question: {q}
+        """
+    
+    # --- ENDPOINTS ---
 @app.get("/")
 def home():
     return {"message": "FastStudy AI Persistence Layer Active 🚀"}
