@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
-# 🚀 CORS Setup - Crucial for connecting to your Frontend
+# 🚀 CORS Setup - Allows your frontend to talk to this backend
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -16,6 +16,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Initialize OpenAI Client
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 # --- DATA MODELS ---
@@ -97,18 +98,17 @@ def build_prompt(q, mode):
 def home():
     return {"message": "FastStudy AI Pro Backend is Live 🚀"}
 
+# 🎯 TEXT GENERATION ENDPOINT
 @app.post("/ask")
 def ask_ai(query: Query):
     try:
-        # Build prompt based on persona
         prompt = build_prompt(query.question, query.mode)
         
-        # 🎯 ADAPTIVE TOKEN CONTROL
-        # Save cost and increase speed for simple questions
+        # ADAPTIVE TOKEN CONTROL
         if query.mode == "short":
             max_tokens = 300
         elif query.mode in ["math", "engineering"]:
-            max_tokens = 900 # More room for deep thinking
+            max_tokens = 900 
         else:
             max_tokens = 600
 
@@ -124,6 +124,28 @@ def ask_ai(query: Query):
     except Exception as e:
         return {"answer": f"Error: {str(e)}"}
 
+# 🎨 PREMIUM IMAGE GENERATION ENDPOINT (DALL-E 3)
+@app.post("/generate-image")
+def generate_image(query: Query):
+    try:
+        # Calling DALL-E 3 for high-quality images
+        response = client.images.generate(
+            model="dall-e-3",
+            prompt=query.question,
+            size="1024x1024",
+            quality="standard",
+            n=1,
+        )
+        image_url = response.data[0].url
+        
+        # Returning HTML string for the frontend to render directly
+        return {
+            "answer": f"🎨 <b>Premium AI Generation complete:</b><br><img src='{image_url}' style='width:100%; border-radius:15px; margin-top:10px; border: 1px solid #444;' alt='AI Generated Image'>"
+        }
+    except Exception as e:
+        return {"answer": f"❌ Image Generation Failed: {str(e)}"}
+
+# 📜 HISTORY ENDPOINTS
 @app.post("/save")
 def save_history(history: SaveHistory):
     data = load_data()
