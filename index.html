@@ -88,7 +88,10 @@
   <div class="chat-view" id="chat-view">
     <div class="ai-msg">
       <i class="fa fa-robot"></i>
-      <div><b>Hello ${localStorage.getItem('user') || 'Friend'}!</b><br>I'm your Smart Assistant. Use the <i class="fa fa-plus-circle"></i> to upload files or the <i class="fa fa-screwdriver-wrench"></i> for Pro Tools.</div>
+      <div class="ai-msg">
+  <i class="fa fa-robot"></i>
+  <div id="welcome-text">Hello! I'm your Smart Assistant.</div>
+</div>
     </div>
   </div>
 
@@ -136,7 +139,9 @@ let currentUser = localStorage.getItem("user") || "Guest";
 let isPremium = localStorage.getItem("isPremium") === "true";
 
 window.onload = () => {
-  document.getElementById("profile-icon").innerText = currentUser[0].toUpperCase();
+  const name = localStorage.getItem("user") || "Friend";
+  document.getElementById("profile-icon").innerText = name[0].toUpperCase();
+  document.getElementById("welcome-text").innerHTML = `<b>Hello ${name}!</b><br>I'm your Smart Assistant. Use the <i class="fa fa-plus-circle"></i> to upload files or the <i class="fa fa-screwdriver-wrench"></i> for Pro Tools.`;
   loadHistory();
 };
 
