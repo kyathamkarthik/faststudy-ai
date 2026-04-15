@@ -7,78 +7,88 @@
   <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <style>
-    :root { --bg: #131314; --sidebar: #1e1f20; --text: #e3e3e3; --accent: #4e9cff; }
+    :root { --bg: #131314; --sidebar: #1e1f20; --text: #e3e3e3; --accent: #4e9cff; --premium: linear-gradient(90deg, #ffd700, #ffa500); }
     body { margin: 0; font-family: 'Google Sans', Arial, sans-serif; background: var(--bg); color: var(--text); display: flex; height: 100vh; overflow: hidden; }
 
-    /* Left Sidebar */
+    /* Sidebar */
     .sidebar { width: 280px; background: var(--sidebar); display: flex; flex-direction: column; padding: 15px; border-right: 1px solid #333; }
-    .new-chat { background: #333; padding: 12px; border-radius: 25px; cursor: pointer; display: flex; align-items: center; gap: 10px; font-weight: 500; transition: 0.3s; width: fit-content; padding-right: 20px; }
+    .new-chat { background: #333; padding: 12px 20px; border-radius: 25px; cursor: pointer; display: flex; align-items: center; gap: 10px; font-weight: 500; transition: 0.3s; width: fit-content; }
     .new-chat:hover { background: #444; }
     .history-list { flex: 1; margin-top: 30px; overflow-y: auto; font-size: 14px; }
-    .history-item { padding: 10px; border-radius: 8px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 5px; }
-    .history-item:hover { background: #2d2e30; }
+    .history-item { padding: 10px; border-radius: 8px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 5px; color: #aaa; }
+    .history-item:hover { background: #2d2e30; color: white; }
 
     /* Main Area */
     .main { flex: 1; display: flex; flex-direction: column; position: relative; }
-    
-    /* Top Bar */
     .top-bar { display: flex; justify-content: flex-end; padding: 15px 30px; align-items: center; }
-    .profile-circle { width: 35px; height: 35px; border-radius: 50%; background: #ff5722; display: flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer; }
+    .profile-circle { width: 35px; height: 35px; border-radius: 50%; background: #ff5722; display: flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer; border: 2px solid transparent; }
+    .profile-circle:hover { border-color: var(--accent); }
 
     /* Chat View */
     .chat-view { flex: 1; overflow-y: auto; padding: 0 15%; display: flex; flex-direction: column; scroll-behavior: smooth; }
     .message { margin-bottom: 30px; line-height: 1.6; max-width: 85%; font-size: 16px; }
     .user-msg { align-self: flex-end; background: #2d2e30; padding: 12px 20px; border-radius: 20px; }
     .ai-msg { align-self: flex-start; display: flex; gap: 15px; }
-    .ai-msg i { color: #4e9cff; margin-top: 5px; }
+    .ai-msg i { color: var(--accent); margin-top: 5px; }
 
-    /* Floating Input Container */
+    /* Input Dock */
     .input-container { padding: 20px 15%; background: var(--bg); }
-    .input-wrapper { background: #1e1f20; border-radius: 30px; padding: 10px 20px; display: flex; flex-direction: column; border: 1px solid transparent; transition: 0.3s; }
-    .input-wrapper:focus-within { border-color: #4e9cff; }
-    
+    .input-wrapper { background: #1e1f20; border-radius: 30px; padding: 10px 20px; display: flex; flex-direction: column; border: 1px solid #333; transition: 0.3s; }
+    .input-wrapper:focus-within { border-color: var(--accent); }
     .input-top { display: flex; align-items: center; gap: 15px; }
     .input-top input { flex: 1; background: transparent; border: none; color: white; padding: 15px; outline: none; font-size: 16px; }
-    
     .input-bottom { display: flex; align-items: center; justify-content: space-between; padding: 5px 0; }
     .actions { display: flex; gap: 15px; color: #aaa; }
     .actions i { cursor: pointer; transition: 0.2s; padding: 8px; border-radius: 50%; }
     .actions i:hover { background: #333; color: white; }
 
-    /* Dropdowns/Menus */
+    /* Dropdowns */
     .dropdown { position: relative; display: inline-block; }
-    .dropdown-content { display: none; position: absolute; bottom: 50px; left: 0; background: #2d2e30; min-width: 200px; border-radius: 12px; box-shadow: 0 8px 16px rgba(0,0,0,0.5); z-index: 100; overflow: hidden; }
+    .dropdown-content { display: none; position: absolute; bottom: 50px; left: 0; background: #2d2e30; min-width: 220px; border-radius: 12px; box-shadow: 0 8px 16px rgba(0,0,0,0.5); z-index: 100; border: 1px solid #444; }
     .dropdown-content div { padding: 12px 16px; cursor: pointer; font-size: 14px; display: flex; align-items: center; gap: 10px; }
     .dropdown-content div:hover { background: #3c3d3f; }
     .show { display: block; }
 
-    /* Model Select */
+    /* Premium UI */
+    .premium-badge { background: var(--premium); color: black; font-size: 9px; padding: 2px 5px; border-radius: 4px; font-weight: 900; }
+    .pay-modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #1e1f20; padding: 30px; border-radius: 20px; border: 1px solid var(--accent); z-index: 1001; text-align: center; width: 320px; box-shadow: 0 0 50px rgba(0,0,0,0.8); }
+    .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; }
+    .btn-pay { background: var(--accent); color: white; border: none; padding: 12px 30px; border-radius: 25px; font-weight: bold; cursor: pointer; margin-top: 20px; width: 100%; }
+
     .model-select { background: transparent; color: #aaa; border: none; cursor: pointer; font-size: 14px; outline: none; }
   </style>
 </head>
 <body>
+
+<div class="overlay" id="overlay" onclick="closePay()"></div>
+<div class="pay-modal" id="pay-modal">
+  <i class="fa fa-crown" style="color: gold; font-size: 50px; margin-bottom: 15px;"></i>
+  <h2 style="margin: 0;">Unlock FastStudy Pro</h2>
+  <p style="color: #aaa; font-size: 14px; margin: 15px 0;">Get unlimited Image Generation & Exam Assistant for just <b>₹40/month</b></p>
+  <button class="btn-pay" onclick="simulatePayment()">Pay ₹40 via UPI</button>
+</div>
 
 <div class="sidebar">
   <div class="new-chat" onclick="location.reload()">
     <i class="fa fa-plus"></i> New chat
   </div>
   <div class="history-list" id="history-list">
-    <p style="color: #666; padding-left: 10px;">Recent</p>
-    </div>
-  <div style="margin-top: auto; font-size: 12px; color: #666; padding: 10px;">
+    <p style="color: #666; padding-left: 10px; font-weight: bold; font-size: 12px;">RECENT</p>
+  </div>
+  <div style="margin-top: auto; font-size: 14px; color: #aaa; padding: 10px; cursor: pointer;">
     <i class="fa fa-gear"></i> Settings
   </div>
 </div>
 
 <div class="main">
   <div class="top-bar">
-    <div class="profile-circle" id="profile-icon">S</div>
+    <div class="profile-circle" id="profile-icon" onclick="loginWithGoogle()">S</div>
   </div>
 
   <div class="chat-view" id="chat-view">
     <div class="ai-msg">
       <i class="fa fa-robot"></i>
-      <div>Hello! I'm your Smart Assistant. How can I help you learn today?</div>
+      <div><b>Hello ${localStorage.getItem('user') || 'Friend'}!</b><br>I'm your Smart Assistant. Use the <i class="fa fa-plus-circle"></i> to upload files or the <i class="fa fa-screwdriver-wrench"></i> for Pro Tools.</div>
     </div>
   </div>
 
@@ -86,15 +96,15 @@
     <div class="input-wrapper">
       <div class="input-top">
         <div class="dropdown">
-          <i class="fa fa-plus-circle" onclick="toggleMenu('plus-menu')" style="font-size: 20px; cursor: pointer;"></i>
+          <i class="fa fa-plus-circle" onclick="toggleMenu('plus-menu')" style="font-size: 20px; cursor: pointer; color: #aaa;"></i>
           <div id="plus-menu" class="dropdown-content">
-            <div onclick="alert('Upload image')"><i class="fa fa-image"></i> Images</div>
-            <div onclick="alert('Upload PDF')"><i class="fa fa-file-pdf"></i> Files</div>
-            <div onclick="alert('Import Code')"><i class="fa fa-code"></i> Import Code</div>
+            <div onclick="alert('Upload images coming soon!')"><i class="fa fa-image"></i> Images</div>
+            <div onclick="alert('PDF Parsing coming soon!')"><i class="fa fa-file-pdf"></i> Files</div>
+            <div onclick="alert('Code Import active')"><i class="fa fa-code"></i> Import Code</div>
           </div>
         </div>
-        <input id="user-input" placeholder="Type here..." onkeypress="if(event.key === 'Enter') ask()" />
-        <i class="fa fa-paper-plane" onclick="ask()" style="color: #4e9cff; cursor: pointer;"></i>
+        <input id="user-input" placeholder="Ask anything..." onkeypress="if(event.key === 'Enter') ask()" />
+        <i class="fa fa-paper-plane" onclick="ask()" style="color: var(--accent); cursor: pointer;"></i>
       </div>
       
       <div class="input-bottom">
@@ -102,8 +112,8 @@
           <div class="dropdown">
             <i class="fa fa-screwdriver-wrench" onclick="toggleMenu('tools-menu')"></i>
             <div id="tools-menu" class="dropdown-content">
-              <div onclick="alert('Generating image...')"><i class="fa fa-wand-magic-sparkles"></i> Image Generation</div>
-              <div onclick="alert('Opening Assistant...')"><i class="fa fa-user-graduate"></i> Smart Exam Assistant</div>
+              <div onclick="checkPremium('image')"><i class="fa fa-wand-magic-sparkles"></i> Image Generation <span class="premium-badge">PRO</span></div>
+              <div onclick="checkPremium('exam')"><i class="fa fa-user-graduate"></i> Smart Exam Assistant <span class="premium-badge">PRO</span></div>
             </div>
           </div>
           <i class="fa fa-microphone"></i>
@@ -123,39 +133,66 @@
 <script>
 const API_URL = "https://faststudy-ai.onrender.com";
 let currentUser = localStorage.getItem("user") || "Guest";
+let isPremium = localStorage.getItem("isPremium") === "true";
 
-// Handle User Display
 window.onload = () => {
   document.getElementById("profile-icon").innerText = currentUser[0].toUpperCase();
   loadHistory();
 };
 
 function toggleMenu(id) {
-  document.querySelectorAll('.dropdown-content').forEach(d => {
-    if(d.id !== id) d.classList.remove('show');
-  });
-  document.getElementById(id).classList.toggle("show");
+  const menu = document.getElementById(id);
+  const isShown = menu.classList.contains('show');
+  document.querySelectorAll('.dropdown-content').forEach(d => d.classList.remove('show'));
+  if (!isShown) menu.classList.add('show');
+}
+
+// PREMIUM LOGIC
+function checkPremium(tool) {
+  if (!isPremium) {
+    document.getElementById("overlay").style.display = "block";
+    document.getElementById("pay-modal").style.display = "block";
+  } else {
+    if (tool === 'image') runImageGen();
+    if (tool === 'exam') alert("Exam Assistant Active!");
+  }
+}
+
+function simulatePayment() {
+  alert("Redirecting to Secure Gateway...");
+  setTimeout(() => {
+    localStorage.setItem("isPremium", "true");
+    alert("Payment of ₹40 Received! Welcome to Pro. 👑");
+    location.reload();
+  }, 2000);
+}
+
+function closePay() {
+  document.getElementById("overlay").style.display = "none";
+  document.getElementById("pay-modal").style.display = "none";
+}
+
+// GOOGLE LOGIN (MOCK)
+function loginWithGoogle() {
+  const name = prompt("Login with Google: Enter your name");
+  if (name) {
+    localStorage.setItem("user", name);
+    location.reload();
+  }
 }
 
 async function ask() {
   const input = document.getElementById("user-input");
-  const chatView = document.getElementById("chat-view");
-  const mode = document.getElementById("mode-select").value;
   const q = input.value;
-
+  const mode = document.getElementById("mode-select").value;
   if(!q.trim()) return;
 
-  // Add User UI
+  const chatView = document.getElementById("chat-view");
   chatView.innerHTML += `<div class="message user-msg">${q}</div>`;
   input.value = "";
   
-  // Add Thinking UI
   const tempId = "ai-" + Date.now();
-  chatView.innerHTML += `
-    <div class="message ai-msg" id="${tempId}">
-      <i class="fa fa-sparkles"></i>
-      <div class="loader">Thinking...</div>
-    </div>`;
+  chatView.innerHTML += `<div class="message ai-msg" id="${tempId}"><i class="fa fa-sparkles"></i> <div class="loader">Thinking...</div></div>`;
   chatView.scrollTop = chatView.scrollHeight;
 
   try {
@@ -165,16 +202,33 @@ async function ask() {
       body: JSON.stringify({ question: q, mode: mode })
     });
     const data = await res.json();
-
-    document.getElementById(tempId).innerHTML = `
-      <i class="fa fa-robot"></i>
-      <div>${formatAnswer(data.answer)}</div>`;
-    
+    document.getElementById(tempId).innerHTML = `<i class="fa fa-robot"></i> <div>${formatAnswer(data.answer)}</div>`;
     if (window.MathJax) MathJax.typeset();
     chatView.scrollTop = chatView.scrollHeight;
-
   } catch (err) {
-    document.getElementById(tempId).innerText = "❌ Error connecting.";
+    document.getElementById(tempId).innerText = "❌ Connection failed.";
+  }
+}
+
+async function runImageGen() {
+  const promptText = prompt("Describe the image you want AI to create:");
+  if (!promptText) return;
+
+  const chatView = document.getElementById("chat-view");
+  const tempId = "img-" + Date.now();
+  chatView.innerHTML += `<div class="message user-msg">🎨 Generate: ${promptText}</div>`;
+  chatView.innerHTML += `<div class="message ai-msg" id="${tempId}"><i class="fa fa-wand-magic-sparkles"></i> <div>Generating image...</div></div>`;
+
+  try {
+    const res = await fetch(`${API_URL}/generate-image`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ question: promptText, mode: "math" })
+    });
+    const data = await res.json();
+    document.getElementById(tempId).innerHTML = `<i class="fa fa-robot"></i> <div>${data.answer}</div>`;
+  } catch {
+    document.getElementById(tempId).innerHTML = "❌ Generation failed.";
   }
 }
 
@@ -183,15 +237,16 @@ function formatAnswer(text) {
 }
 
 async function loadHistory() {
-  const res = await fetch(`${API_URL}/history/${currentUser}`);
-  const data = await res.json();
-  const list = document.getElementById("history-list");
-  data.slice(0, 10).forEach(item => {
-    list.innerHTML += `<div class="history-item"><i class="fa fa-message"></i> ${item.q}</div>`;
-  });
+  try {
+    const res = await fetch(`${API_URL}/history/${currentUser}`);
+    const data = await res.json();
+    const list = document.getElementById("history-list");
+    data.slice(0, 10).forEach(item => {
+      list.innerHTML += `<div class="history-item"><i class="fa-regular fa-message" style="margin-right:10px;"></i> ${item.q}</div>`;
+    });
+  } catch (e) { console.log("Guest mode - No history"); }
 }
 
-// Close menus on click outside
 window.onclick = (e) => {
   if (!e.target.matches('.fa-plus-circle') && !e.target.matches('.fa-screwdriver-wrench')) {
     document.querySelectorAll('.dropdown-content').forEach(d => d.classList.remove('show'));
