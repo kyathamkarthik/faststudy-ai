@@ -31,13 +31,16 @@
     .ai-msg { align-self: flex-start; display: flex; gap: 15px; }
     .ai-msg i { color: var(--accent); margin-top: 5px; }
 
-    /* Input Dock */
+    /* Input Container */
     .input-container { padding: 20px 15%; background: var(--bg); }
     .input-wrapper { background: #1e1f20; border-radius: 30px; padding: 10px 20px; display: flex; flex-direction: column; border: 1px solid #333; transition: 0.3s; }
+    .input-wrapper.image-mode { border-color: #ffd700; box-shadow: 0 0 10px rgba(255, 215, 0, 0.2); }
     .input-wrapper:focus-within { border-color: var(--accent); }
+    
     .input-top { display: flex; align-items: center; gap: 15px; }
     .input-top input { flex: 1; background: transparent; border: none; color: white; padding: 15px; outline: none; font-size: 16px; }
     .input-bottom { display: flex; align-items: center; justify-content: space-between; padding: 5px 0; }
+    
     .actions { display: flex; gap: 15px; color: #aaa; }
     .actions i { cursor: pointer; transition: 0.2s; padding: 8px; border-radius: 50%; }
     .actions i:hover { background: #333; color: white; }
@@ -56,6 +59,9 @@
     .btn-pay { background: var(--accent); color: white; border: none; padding: 12px 30px; border-radius: 25px; font-weight: bold; cursor: pointer; margin-top: 20px; width: 100%; }
 
     .model-select { background: transparent; color: #aaa; border: none; cursor: pointer; font-size: 14px; outline: none; }
+    
+    /* Image generation specific styles */
+    .generated-img { width: 100%; border-radius: 15px; margin-top: 10px; border: 1px solid #444; }
   </style>
 </head>
 <body>
@@ -87,16 +93,13 @@
 
   <div class="chat-view" id="chat-view">
     <div class="ai-msg">
-      <i class="fa-robot"></i>
-      <div class="ai-msg">
-  <i class="fa fa-robot"></i>
-  <div id="welcome-text">Hello! I'm your Smart Assistant.</div>
-</div>
+      <i class="fa fa-robot"></i>
+      <div id="welcome-text">Hello! I'm your Smart Assistant.</div>
     </div>
   </div>
 
   <div class="input-container">
-    <div class="input-wrapper">
+    <div class="input-wrapper" id="input-wrapper">
       <div class="input-top">
         <div class="dropdown">
           <i class="fa fa-plus-circle" onclick="toggleMenu('plus-menu')" style="font-size: 20px; cursor: pointer; color: #aaa;"></i>
@@ -137,6 +140,7 @@
 const API_URL = "https://faststudy-ai.onrender.com";
 let currentUser = localStorage.getItem("user") || "Guest";
 let isPremium = localStorage.getItem("isPremium") === "true";
+let isImageMode = false;
 
 window.onload = () => {
   const name = localStorage.getItem("user") || "Friend";
@@ -158,15 +162,30 @@ function checkPremium(tool) {
     document.getElementById("overlay").style.display = "block";
     document.getElementById("pay-modal").style.display = "block";
   } else {
-    if (tool === 'image') runImageGen();
+    if (tool === 'image') toggleImageMode();
     if (tool === 'exam') alert("Exam Assistant Active!");
   }
+}
+
+function toggleImageMode() {
+  isImageMode = !isImageMode;
+  const input = document.getElementById("user-input");
+  const wrapper = document.getElementById("input-wrapper");
+  if (isImageMode) {
+    input.placeholder = "🎨 Describe the image you want AI to create...";
+    wrapper.classList.add('image-mode');
+  } else {
+    input.placeholder = "Ask anything...";
+    wrapper.classList.remove('image-mode');
+  }
+  document.querySelectorAll('.dropdown-content').forEach(d => d.classList.remove('show'));
 }
 
 function simulatePayment() {
   alert("Redirecting to Secure Gateway...");
   setTimeout(() => {
     localStorage.setItem("isPremium", "true");
+    isPremium = true;
     alert("Payment of ₹40 Received! Welcome to Pro. 👑");
     location.reload();
   }, 2000);
@@ -177,7 +196,6 @@ function closePay() {
   document.getElementById("pay-modal").style.display = "none";
 }
 
-// GOOGLE LOGIN (MOCK)
 function loginWithGoogle() {
   const name = prompt("Login with Google: Enter your name");
   if (name) {
@@ -193,47 +211,37 @@ async function ask() {
   if(!q.trim()) return;
 
   const chatView = document.getElementById("chat-view");
-  chatView.innerHTML += `<div class="message user-msg">${q}</div>`;
+  chatView.innerHTML += `<div class="message user-msg">${isImageMode ? '🎨 ' : ''}${q}</div>`;
   input.value = "";
   
   const tempId = "ai-" + Date.now();
   chatView.innerHTML += `<div class="message ai-msg" id="${tempId}"><i class="fa fa-sparkles"></i> <div class="loader">Thinking...</div></div>`;
   chatView.scrollTop = chatView.scrollHeight;
 
+  // Choose endpoint based on mode
+  const endpoint = isImageMode ? "/generate-image" : "/ask";
+
   try {
-    const res = await fetch(`${API_URL}/ask`, {
+    const res = await fetch(`${API_URL}${endpoint}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ question: q, mode: mode })
     });
     const data = await res.json();
-    document.getElementById(tempId).innerHTML = `<i class="fa fa-robot"></i> <div>${formatAnswer(data.answer)}</div>`;
+    
+    // Safety check for backend response key "answer"
+    const aiResponse = data.answer || "❌ Error: Backend didn't send an answer.";
+    
+    document.getElementById(tempId).innerHTML = `<i class="fa fa-robot"></i> <div>${formatAnswer(aiResponse)}</div>`;
+    
     if (window.MathJax) MathJax.typeset();
     chatView.scrollTop = chatView.scrollHeight;
+    
+    // Auto-disable image mode after one use for better UX
+    if(isImageMode) toggleImageMode();
+
   } catch (err) {
     document.getElementById(tempId).innerText = "❌ Connection failed.";
-  }
-}
-
-async function runImageGen() {
-  const promptText = prompt("Describe the image you want AI to create:");
-  if (!promptText) return;
-
-  const chatView = document.getElementById("chat-view");
-  const tempId = "img-" + Date.now();
-  chatView.innerHTML += `<div class="message user-msg">🎨 Generate: ${promptText}</div>`;
-  chatView.innerHTML += `<div class="message ai-msg" id="${tempId}"><i class="fa fa-wand-magic-sparkles"></i> <div>Generating image...</div></div>`;
-
-  try {
-    const res = await fetch(`${API_URL}/generate-image`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ question: promptText, mode: "math" })
-    });
-    const data = await res.json();
-    document.getElementById(tempId).innerHTML = `<i class="fa fa-robot"></i> <div>${data.answer}</div>`;
-  } catch {
-    document.getElementById(tempId).innerHTML = "❌ Generation failed.";
   }
 }
 
