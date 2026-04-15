@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
-# 🚀 CORS Setup - Allows your frontend to talk to this backend
+# 🚀 CORS Setup - Crucial for connecting to your Frontend
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -104,7 +104,7 @@ def ask_ai(query: Query):
     try:
         prompt = build_prompt(query.question, query.mode)
         
-        # ADAPTIVE TOKEN CONTROL
+        # 🎯 ADAPTIVE TOKEN CONTROL
         if query.mode == "short":
             max_tokens = 300
         elif query.mode in ["math", "engineering"]:
