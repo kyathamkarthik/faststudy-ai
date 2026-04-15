@@ -2,92 +2,82 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>FastStudy AI | Multi-Mode</title>
+  <title>FastStudy | Adaptive AI</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
   <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 
   <style>
-    body { margin: 0; font-family: 'Segoe UI', Roboto, sans-serif; background: #f8fafc; display: flex; height: 100vh; overflow: hidden; }
+    body { margin: 0; font-family: 'Segoe UI', sans-serif; background: #f8fafc; display: flex; height: 100vh; overflow: hidden; }
     
     /* Sidebar */
     .sidebar { width: 240px; background: white; border-right: 1px solid #e2e8f0; padding: 25px; display: flex; flex-direction: column; }
-    .sidebar h2 { color: #22c55e; font-size: 22px; margin-bottom: 30px; font-weight: 800; }
-    .sidebar p { padding: 12px; border-radius: 10px; cursor: pointer; color: #64748b; margin: 5px 0; transition: 0.2s; display: flex; align-items: center; gap: 10px; }
-    .sidebar p:hover { background: #f1f5f9; color: #0f172a; }
-    .sidebar p.active { background: #e2e8f0; font-weight: bold; color: #0f172a; }
+    .sidebar h2 { color: #22c55e; font-size: 22px; margin-bottom: 30px; }
+    .sidebar p { padding: 12px; border-radius: 10px; cursor: pointer; color: #64748b; margin: 5px 0; }
+    .sidebar p.active { background: #e2e8f0; color: #0f172a; font-weight: bold; }
 
-    /* Main Chat Area */
-    .main { flex: 1; display: flex; flex-direction: column; background: #f8fafc; position: relative; }
-    .chat-container { flex: 1; overflow-y: auto; padding: 40px 20px; display: flex; flex-direction: column; align-items: center; }
+    /* Main Area */
+    .main { flex: 1; display: flex; flex-direction: column; }
+    .chat-container { flex: 1; overflow-y: auto; padding: 20px; display: flex; justify-content: center; }
     .chat-inner { width: 100%; max-width: 750px; display: flex; flex-direction: column; }
 
     /* Message Bubbles */
-    .message { padding: 15px 20px; border-radius: 18px; margin-bottom: 15px; max-width: 80%; line-height: 1.6; font-size: 15px; }
-    .user { background: #22c55e; color: white; align-self: flex-end; border-bottom-right-radius: 4px; box-shadow: 0 4px 12px rgba(34, 197, 94, 0.2); }
-    .ai { background: white; color: #1e293b; align-self: flex-start; border-bottom-left-radius: 4px; border: 1px solid #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+    .message { padding: 15px 20px; border-radius: 18px; margin-bottom: 15px; max-width: 80%; line-height: 1.6; }
+    .user { background: #22c55e; color: white; align-self: flex-end; border-bottom-right-radius: 4px; }
+    .ai { background: white; color: #1e293b; align-self: flex-start; border: 1px solid #e2e8f0; border-bottom-left-radius: 4px; }
 
-    /* Input Area */
-    .input-wrapper { padding: 20px; display: flex; justify-content: center; background: white; border-top: 1px solid #e2e8f0; }
-    .input-box { width: 100%; max-width: 750px; display: flex; flex-direction: column; gap: 10px; }
-    input { width: 100%; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0; outline: none; font-size: 16px; box-sizing: border-box; transition: 0.2s; }
-    input:focus { border-color: #22c55e; box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1); }
+    /* Controls */
+    .input-wrapper { padding: 20px; background: white; border-top: 1px solid #e2e8f0; display: flex; justify-content: center; }
+    .input-box { width: 100%; max-width: 750px; display: flex; flex-direction: column; gap: 12px; }
+    
+    .mode-selector { display: flex; gap: 10px; }
+    .mode-selector button { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0; background: #f8fafc; cursor: pointer; font-weight: 600; transition: 0.2s; }
+    .mode-selector button.active { background: #22c55e; color: white; border-color: #22c55e; }
 
-    .modes { display: flex; gap: 10px; }
-    .mode-btn { padding: 8px 15px; border-radius: 8px; border: 1px solid #e2e8f0; background: white; cursor: pointer; font-size: 13px; font-weight: 600; color: #64748b; transition: 0.2s; }
-    .mode-btn:hover { border-color: #22c55e; color: #22c55e; }
-    .mode-btn.active { background: #22c55e; color: white; border-color: #22c55e; }
-
-    /* Loader */
-    .typing { font-style: italic; color: #94a3b8; font-size: 13px; margin-left: 10px; }
+    .input-row { display: flex; gap: 10px; }
+    input { flex: 1; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0; outline: none; }
   </style>
 </head>
 <body>
 
 <div class="sidebar">
   <h2 id="user-display">⚡ FastStudy</h2>
-  <p onclick="location.reload()" class="active" id="nav-home">🏠 New Chat</p>
-  <p onclick="showPage('recents')" id="nav-recents">📜 History</p>
-  <p onclick="showLogin()" id="nav-login">👤 Profile</p>
+  <p onclick="location.reload()" class="active">🏠 Chat</p>
+  <p onclick="showPage('recents')">📜 History</p>
   <p onclick="logout()" style="margin-top:auto; color: #ef4444;">🚪 Logout</p>
 </div>
 
 <div class="main">
-  <div class="chat-container" id="chat-scroll">
+  <div class="chat-container">
     <div class="chat-inner" id="chat-area">
-      <div class="message ai">👋 Hey! I'm your AI Study Partner. Choose a mode below and ask me anything.</div>
+      <div class="message ai">👋 Ready to start. Select a mode and ask your question!</div>
     </div>
   </div>
 
   <div class="input-wrapper">
     <div class="input-box">
-      <div class="modes">
-        <button class="mode-btn active" id="btn-normal" onclick="setMode('normal')">💬 Normal AI</button>
-        <button class="mode-btn" id="btn-math" onclick="setMode('math')">📐 Math Solving</button>
-        <button class="mode-btn" id="btn-short" onclick="setMode('short')">⚡ Quick Summary</button>
+      <div class="mode-selector">
+        <button id="btn-short" onclick="setMode('short')">⚡ Short</button>
+        <button id="btn-normal" class="active" onclick="setMode('normal')">📚 Normal</button>
+        <button id="btn-max" onclick="setMode('max')">🧠 Max</button>
       </div>
-      <div style="display: flex; gap: 10px;">
-        <input id="question" placeholder="Type your question here..." onkeypress="if(event.key === 'Enter') ask()" />
-        <button onclick="ask()" style="background:#22c55e; color:white; border:none; padding:0 20px; border-radius:12px; cursor:pointer; font-weight:bold;">Send</button>
+      <p style="font-size:12px; color:#64748b; margin: 0; text-align: center;">⚡ Fast | 📚 Balanced | 🧠 Detailed (Math Ready)</p>
+      <div class="input-row">
+        <input id="question" placeholder="Ask your question here..." onkeypress="if(event.key === 'Enter') ask()" />
+        <button onclick="ask()" style="background:#22c55e; color:white; border:none; padding:0 20px; border-radius:12px; cursor:pointer;">Send</button>
       </div>
     </div>
   </div>
 </div>
 
 <script>
-let currentMode = 'normal';
-let currentUser = localStorage.getItem("user") || null;
+let currentMode = "normal";
+let currentUser = localStorage.getItem("user") || "Guest";
 const API_URL = "https://faststudy-ai.onrender.com";
 
 function setMode(mode) {
   currentMode = mode;
-  document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
-  document.getElementById('btn-' + mode).classList.add('active');
-  
-  const input = document.getElementById("question");
-  if (mode === 'math') input.placeholder = "Enter your math problem (e.g. solve x^2 + 5x + 6 = 0)";
-  else if (mode === 'short') input.placeholder = "Paste a long text for a quick summary...";
-  else input.placeholder = "Ask anything like a normal conversation...";
+  document.querySelectorAll(".mode-selector button").forEach(btn => btn.classList.remove("active"));
+  document.getElementById("btn-" + mode).classList.add("active");
 }
 
 async function ask() {
@@ -97,15 +87,12 @@ async function ask() {
 
   if (!q.trim()) return;
 
-  // Add User Message
   chatArea.innerHTML += `<div class="message user">${q}</div>`;
   qInput.value = "";
   
-  // Add Thinking Message
   const tempId = "msg-" + Date.now();
-  chatArea.innerHTML += `<div class="message ai" id="${tempId}"><span class="typing">AI is thinking...</span></div>`;
-  scrollToBottom();
-
+  chatArea.innerHTML += `<div class="message ai" id="${tempId}">⏳ Thinking (${currentMode} mode)...</div>`;
+  
   try {
     const res = await fetch(`${API_URL}/ask`, {
       method: "POST",
@@ -114,18 +101,14 @@ async function ask() {
     });
     const data = await res.json();
 
-    // Replace Loader with Response
-    const aiMsgElement = document.getElementById(tempId);
-    aiMsgElement.innerHTML = formatAnswer(data.answer);
+    const aiBubble = document.getElementById(tempId);
+    aiBubble.innerHTML = data.answer.replace(/\n/g, "<br>");
 
-    // TRIGGER MATH RENDERING if needed
     if (window.MathJax) {
-      MathJax.typesetPromise([aiMsgElement]).then(() => {
-        scrollToBottom();
-      });
+      MathJax.typesetPromise([aiBubble]);
     }
 
-    if (currentUser) {
+    if (currentUser !== "Guest") {
       fetch(`${API_URL}/save`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -133,23 +116,11 @@ async function ask() {
       });
     }
   } catch (err) {
-    document.getElementById(tempId).innerText = "❌ Connection error.";
+    document.getElementById(tempId).innerText = "❌ Error connecting.";
   }
 }
 
-function formatAnswer(text) {
-  return text
-    .replace(/\*\*(.*?)\*\*/g, "<b>$1</b>")
-    .replace(/\n/g, "<br>");
-}
-
-function scrollToBottom() {
-  const container = document.getElementById("chat-scroll");
-  container.scrollTop = container.scrollHeight;
-}
-
 function logout() { localStorage.clear(); location.reload(); }
-// ... keep showPage and Login functions same as before ...
 </script>
 </body>
 </html>
