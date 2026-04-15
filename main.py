@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
+# 🚀 CORS Setup - Crucial for connecting to your Frontend
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -43,62 +44,83 @@ def save_data(data):
     with open(DATA_FILE, "w") as f:
         json.dump(data, f)
 
-# --- AI LOGIC ---
+# --- DYNAMIC PROMPT LOGIC ---
 def build_prompt(q, mode):
-    # 1. ⚡ SHORT MODE: Fast, direct, no fluff.
+    # 1. ⚡ SHORT MODE: The Speedster
     if mode == "short":
         return f"""
         You are a helpful, brief AI assistant. 
         Answer this question in 2-3 sentences max. 
-        Use \\( \\) for any technical terms or math.
+        Be direct and avoid fluff. 
+        Use \\( \\) for any technical terms.
         
         Question: {q}
         """
     
-    # 2. 📚 EXAM MODE: The Professor (Math & LaTeX Heavy)
+    # 2. 📐 MATH MODE: The LaTeX Professor
     elif mode == "math":
         return f"""
-    You are an expert Math Professor.
+        You are an expert Math Professor.
+        STRICT INSTRUCTIONS:
+        1. Solve step-by-step clearly.
+        2. Use LaTeX for ALL math: \\( inline \\) and \\[ block \\].
+        3. Explain each step.
+        4. Show the final answer clearly in a block.
 
-    STRICT INSTRUCTIONS:
-    1. Solve step-by-step clearly.
-    2. Use proper LaTeX formatting:
-       - Inline: \\( a^2 + b^2 = c^2 \\)
-       - Block equations: \\[ c = \\sqrt{{a^2 + b^2}} \\]
-    3. Put formulas on separate lines.
-    4. Explain each step clearly.
-    5. Show final answer clearly.
-
-    Question: {q}
-    """
+        Question: {q}
+        """
     
-    # 3. 😄 EXPLAIN MODE: The "Coffee" Friend (Normal Conversation)
+    # 3. 🛠️ ENGINEERING MODE: The Lead Architect
+    elif mode == "engineering":
+        return f"""
+        You are a Senior Engineering Lead. 
+        Break down the technical architecture, logic, or process of this topic.
+        Use bullet points, technical terminology, and explain the "how" and "why".
+        Use \\( \\) for variables or formulas.
+
+        Question: {q}
+        """
+    
+    # 4. 📚 NORMAL/EXPLAIN MODE: The Classmate (Default)
     else:
         return f"""
         You are a friendly, smart classmate. 
-        Explain this concept in simple, conversational terms like we're hanging out.
-        Don't be overly formal. Use analogies.
-        If there's math, keep it simple.
+        Explain this concept in simple, conversational terms.
+        Use analogies and don't be overly formal.
         
         Question: {q}
         """
-    
-    # --- ENDPOINTS ---
+
+# --- ENDPOINTS ---
+
 @app.get("/")
 def home():
-    return {"message": "FastStudy AI Persistence Layer Active 🚀"}
+    return {"message": "FastStudy AI Pro Backend is Live 🚀"}
 
 @app.post("/ask")
 def ask_ai(query: Query):
     try:
+        # Build prompt based on persona
         prompt = build_prompt(query.question, query.mode)
+        
+        # 🎯 ADAPTIVE TOKEN CONTROL
+        # Save cost and increase speed for simple questions
+        if query.mode == "short":
+            max_tokens = 300
+        elif query.mode in ["math", "engineering"]:
+            max_tokens = 900 # More room for deep thinking
+        else:
+            max_tokens = 600
+
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[{"role": "user", "content": prompt}],
-            max_tokens=600
+            max_tokens=max_tokens
         )
+
         answer = response.choices[0].message.content
         return {"answer": answer if answer else "No response"}
+
     except Exception as e:
         return {"answer": f"Error: {str(e)}"}
 
@@ -110,6 +132,7 @@ def save_history(history: SaveHistory):
     if user not in data:
         data[user] = []
         
+    # Insert at the beginning so newest is on top
     data[user].insert(0, {"q": history.question, "ans": history.answer})
     save_data(data)
     return {"status": "saved"}
